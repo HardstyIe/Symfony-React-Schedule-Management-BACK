@@ -3,6 +3,11 @@
 namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
+use App\Entity\Absence;
+use App\Entity\AbsenceUser;
+use App\Entity\CourTeacher;
+use App\Entity\LogUser;
+use App\Entity\PlanningTeacher;
 use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -10,68 +15,47 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
-use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: '`user`')]
-#[ApiResource(
-  normalizationContext: ['groups' => ['user_read']],
-  denormalizationContext: ['groups' => ['user_write']],
-  itemOperations: [
-    'get' => ['normalization_context' => ['groups' => ['user_read', 'user_detail']]],
-    'put' => ['normalization_context' => ['groups' => ['user_write', 'user_update']]],
-  ],
-  collectionOperations: [
-    'get' => ['normalization_context' => ['groups' => ['user_read', 'user_list']]],
-    'post' => ['normalization_context' => ['groups' => ['user_write', 'user_create']]],
-  ],
-)]
+#[ApiResource()]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
   #[ORM\Id]
   #[ORM\GeneratedValue]
   #[ORM\Column]
-  #[Groups(['user_read', 'user_detail', 'user_list'])] // Inclus dans toutes les réponses GET
   private ?int $id = null;
 
   #[ORM\Column(length: 180, unique: true)]
-  #[Groups(['user_read', 'user_detail', 'user_list', 'user_write', 'user_create'])] // Inclus dans les réponses GET et peut être défini lors de la création
   #[Assert\Email]
   private ?string $email = null;
 
   #[ORM\Column]
-  #[Groups(['user_read', 'user_detail'])] // Inclus dans les réponses GET pour une seule ressource
   private array $roles = [];
 
   /**
    * @var string The hashed password
    */
   #[ORM\Column]
-  #[Groups(['user_write', 'user_create'])] // Peut être défini lors de la création ou de la mise à jour
   #[Assert\Length(min: 8)]
   private ?string $password = null;
 
   #[ORM\Column(length: 255)]
-  #[Groups(['user_read', 'user_detail', 'user_list', 'user_write', 'user_create', 'user_update'])] // Inclus dans les réponses GET et peut être défini lors de la création/mise à jour
   #[Assert\NotBlank]
   #[Assert\Length(min: 1, max: 255)]
   private ?string $firstName = null;
 
   #[ORM\Column(length: 255)]
-  #[Groups(['user_read', 'user_detail', 'user_list', 'user_write', 'user_create', 'user_update'])] // Inclus dans les réponses GET et peut être défini lors de la création/mise à jour
   #[Assert\NotBlank]
   #[Assert\Length(min: 1, max: 255)]
   private ?string $lastName = null;
 
   #[ORM\Column(type: Types::DATE_MUTABLE)]
-  #[Groups(['user_read', 'user_detail', 'user_write', 'user_create', 'user_update'])] // Inclus dans les réponses GET pour une seule ressource et peut être défini lors de la création/mise à jour
   #[Assert\NotBlank]
-  #[Assert\Date]
   private ?\DateTimeInterface $birthday = null;
 
   #[ORM\Column(length: 15)]
-  #[Groups(['user_read', 'user_detail', 'user_write', 'user_create', 'user_update'])] // Inclus dans les réponses GET pour une seule ressource et peut être défini lors de la création/mise à jour
   #[Assert\Length(min: 10, max: 15)]
   #[Assert\Regex(pattern: "/^\+?[0-9 ]+$/")]
   private ?string $phone = null;
@@ -202,7 +186,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     return $this->birthday;
   }
 
-  public function setBirthday(\DateTimeInterface $birthday): static
+  public function setBirthday(?\DateTimeInterface $birthday): self
   {
     $this->birthday = $birthday;
 
